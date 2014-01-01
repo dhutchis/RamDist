@@ -18,7 +18,7 @@ Let's step up to bigger results:
 ![graph for q1=4,q2=4](results/pic_R44_m15000.png)  
 
 ## Method
-There are $2^{\binom{n}{2}}$ graphs of size $n$.  When n is small, say < 7, we can enumerate every graph of size n and count how many are good.
+There are 2^(n*(n-1)/2) graphs of size n.  When n is small, say < 7, we can enumerate every graph of size n and count how many are good.
 
 When n is large, say >= 7, enumerating every graph of size n is infeasible.  Instead, generate m random graphs of size n and count how many are good.  Use this to estimate the true proportion of good graphs. A typical value for m is 15000.
 
@@ -28,6 +28,9 @@ Along with the estimates in the n large case, I calculate 99% confidence interva
 
 Next steps: analyze results for q1=5,q2=5. Use larger sample sizes.  Consider parallelizing code.
 
+
+### Thanks
+to the [igraph](http://igraph.sourceforge.net/index.html) library! Your clique number and independent set number and random graph generation methods really helped.
 
 
 

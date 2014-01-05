@@ -18,19 +18,33 @@ logger = logging.getLogger(__name__)
 # Goal: for R(3,4)=9, determine the distribution of the proportion of good graphs of size n
 #       as n increases from 1 to 9
 def __main__():
-    q1, q2 = 5, 5
-    m = 10000
-##    dic = dict()
-##    for n in range(1,7):
-##        dic[n] = goodfraction_systematic(n,3,3)
+#    q1, q2 = 4,4
+    m = 50000
     # dic is of the form n -> (p, m, lb, ub)
-    dic = create_dist(q1,q2,m)
-    print dic
+    for q1 in range(3,7):
+        for q2 in range(3,q1+1):
+            dic = dict()
+            #dic = create_dist(q1,q2,m)
+            print q1,q2,dic
+            #write_results_to_file(dic,q1,q2,m)
+            dic = read_results_from_file(q1,q2,m)
+            do_plot(dic,q1,q2,m)
+
+def write_results_to_file(dic,q1,q2,m):
+    'Write dictionary of results to csv file'
     writer = csv.writer(open('results/dic_R{}{}_m{}.csv'.format(q1,q2,m), 'wb'))
     for key, value in dic.items():
         p, m, lb, ub = value
-        writer.writerow([key, p, m, lb, ub])
-    do_plot(dic,q1,q2,m)
+        writer.writerow([key, p, int(m), lb, ub])
+
+def read_results_from_file(q1,q2,m):
+    'Read csv file and return the dictionary of values'
+    reader = csv.reader(open('results/dic_R{}{}_m{}.csv'.format(q1,q2,m), 'rb'))
+    dic = dict()
+    for row in reader:
+        dic[int(row[0],10)] = float(row[1]),int(row[2],10),float(row[3]),float(row[4]) #tuple(map(float,row[1:5]))
+        #print dic[int(row[0])]
+    return dic
 
 def do_plot(dic,q1,q2,m):
     x_n, y_p, y_lb, y_ub = [], [], [], []
@@ -39,16 +53,67 @@ def do_plot(dic,q1,q2,m):
         y_p.append(val[0])
         y_lb.append(val[0]-val[2]) # want errors from center
         y_ub.append(val[3]-val[0])
-    plt.hold(True)
+    # get lb, ub
+    lb = get_lb(q1,q2)
+    ub = get_ub(q1,q2)
+    plt.hold(False)
     #plt.plot(x_n, y_lb, 'r')
     #plt.plot(x_n, y_ub, 'r')
     plt.plot(x_n, y_p, linestyle="dashed", marker="o") #linewidth=2,
+    plt.hold(True)
     plt.errorbar(x_n,y_p, yerr=[y_lb,y_ub], linestyle="None", marker="None")
+    if lb != None:
+        plt.axvline(x=lb, ymin=0, ymax=1, color='g', linestyle='dashed')
+    if ub != None:
+        plt.axvline(x=ub, ymin=0, ymax=1, color='m', linestyle='dashed')
+        plt.axvline(x=ub+ub/25,ymin=0,ymax=0,linestyle="None", marker="None")
     plt.xlabel('n', size=18)
     plt.ylabel('Pr( good graph )', size=18)
     plt.title('q1={}, q2={}'.format(q1,q2), size=20)
     #plt.show()
     plt.savefig('results/pic_R{}{}_m{}.png'.format(q1,q2,m))
+
+# known lower bounds
+arr_lb = [
+[1],
+[1,2],
+[1,3,6],
+[1,4,9,18],
+[1,5,14,25,43],
+[1,6,18,36,58,102],
+[1,7,23,49,80,113,205],
+[1,8,28,58,101,132,217,282],
+[1,9,36,73,126,169,241,317,565],
+[1,10,40,92,144,179,289,331,581,798]
+]
+arr_ub = [
+[1],
+[1,2],
+[1,3,6],
+[1,4,9,18],
+[1,5,14,25,49],
+[1,6,18,41,87,165],
+[1,7,23,61,143,298,540],
+[1,8,28,84,216,495,1031,1870],
+[1,9,36,115,316,780,1713,3583,6588],
+[1,10,42,149,442,1171,2826,6090,12677,23556]
+]
+def get_lb(q1,q2):
+    if q1<q2:
+        q1, q2 = q2, q1
+    q1 -= 1 # adjust index to 0-based
+    q2 -= 1
+    if q2 < 0 or q1 >= len(arr_lb):
+        return None
+    return arr_lb[q1][q2]
+def get_ub(q1,q2):
+    if q1<q2:
+        q1, q2 = q2, q1
+    q1 -= 1 # adjust index to 0-based
+    q2 -= 1
+    if q2 < 0 or q1 >= len(arr_lb):
+        return None
+    return arr_ub[q1][q2]
 
 
 # 0.5 is conservative; changing makes a smaller n
@@ -147,7 +212,6 @@ def goodfraction_sample(n,q1,q2, m):
     for num in itertools.count(1):
         # generate random graph size n
         g = igraph.Graph.Erdos_Renyi(n=n,p=0.5)
-        # is it good?
         if is_good_graph(g,q1,q2):
             good += 1
         else:

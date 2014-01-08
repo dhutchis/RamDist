@@ -1,4 +1,5 @@
 from __future__ import division
+import random
 import igraph
 import csv
 import itertools
@@ -51,27 +52,27 @@ def __main__():
 #    q1, q2 = 4,4
     m = 50000
     # dic is of the form n -> (p, m, lb, ub)
-##    for q1 in range(3,7):
-##        for q2 in range(3,q1+1):
-##            dic = dict()
-##            #dic = create_dist(q1,q2,m)
-##            print q1,q2,dic
-##            #write_results_to_file(dic,q1,q2,m)
-##            dic = read_results_from_file(q1,q2,m)
-##            do_plot(dic,q1,q2,m)
+    for q1 in range(3,7):
+        for q2 in range(3,q1+1):
+            dic = dict()
+            dic = create_dist(q1,q2,m)
+            print q1,q2,dic
+            write_results_to_file(dic,q1,q2,m)
+            #dic = read_results_from_file(q1,q2,m)
+            do_plot(dic,q1,q2,m)
 ##    write_table_csv(arr_ub,'results/table_ub.csv')
-    make_table_approx_ramsey(.99)
+##    make_table_approx_ramsey(.99)
 
 def write_results_to_file(dic,q1,q2,m):
     'Write dictionary of results to csv file'
-    writer = csv.writer(open('results/dic_R{}{}_m{}.csv'.format(q1,q2,m), 'wb'))
+    writer = csv.writer(open('results_randomp/dic_R{}{}_m{}.csv'.format(q1,q2,m), 'wb'))
     for key, value in dic.items():
         p, m, lb, ub = value
         writer.writerow([key, p, int(m), lb, ub])
 
 def read_results_from_file(q1,q2,m):
     'Read csv file and return the dictionary of values'
-    reader = csv.reader(open('results/dic_R{}{}_m{}.csv'.format(q1,q2,m), 'rb'))
+    reader = csv.reader(open('results_randomp/dic_R{}{}_m{}.csv'.format(q1,q2,m), 'rb'))
     dic = dict()
     for row in reader:
         dic[int(row[0],10)] = float(row[1]),int(row[2],10),float(row[3]),float(row[4]) #tuple(map(float,row[1:5]))
@@ -103,7 +104,7 @@ def do_plot(dic,q1,q2,m):
     plt.ylabel('Pr( good graph )', size=18)
     plt.title('q1={}, q2={}'.format(q1,q2), size=20)
     #plt.show()
-    plt.savefig('results/pic_R{}{}_m{}.png'.format(q1,q2,m))
+    plt.savefig('results_randomp/pic_R{}{}_m{}.png'.format(q1,q2,m))
 
 def write_table_csv(arr2d,filename):
     'Write 2-dimensional array to filename in csv format'
@@ -251,16 +252,19 @@ def generate_graphs_help(g,i,j):
     return
 
 # Given n and sample size m, sample m graphs of size n, count how many are good and return the fraction
-def goodfraction_sample(n,q1,q2, m):
+def goodfraction_sample(n,q1,q2, m, func_p=lambda: 0.5):
     '''Sample m graphs of size n and return p, m, padj-w, padj+w
     where p is the proportion of good graphs,
-    padj and w are from the confidence interval using the Wilson score method'''
+    padj and w are from the confidence interval using the Wilson score method
+    func_p is the function for choosing p, the Erdos-Renyi edge probability
+        by default it is just 0.5.  Pass a 0-argument function.'''
 ##    confidence = 0.99,interval_width = 0.01
 ##    m = choose_sample_size(confidence,interval_width)
     good, bad = 0, 0
     for num in itertools.count(1):
-        # generate random graph size n
-        g = igraph.Graph.Erdos_Renyi(n=n,p=0.5)
+        # generate random graph size n, with probability of edges from function result
+        pedge = func_p()
+        g = igraph.Graph.Erdos_Renyi(n=n,p=pedge)
         if is_good_graph(g,q1,q2):
             good += 1
         else:
@@ -288,4 +292,29 @@ def goodfraction_sample(n,q1,q2, m):
     return p, m, padj-w, padj+w
 
 
-__main__()
+def validate_random_sampling(n,q1q2list,m):
+    '''Create a table of random sampling vs systematic sampling for
+    given q1,q2,m for n=1 upto maxn.
+    Ranodom sampling sues different schemes for choosing the Erdos-Renyi edge probability
+    '''
+    writer = csv.writer(open('results_validate/validate_m{}.csv'.format(m), 'wb'))
+    print '[n, q1, q2, truep, randomp_50, randomp_beta1515, random_uniform]'
+    writer.writerow(['n', 'q1', 'q2', 'truep', 'randomp_50', 'randomp_beta1515', 'random_uniform'])
+    for q1,q2 in q1q2list:
+        truep = goodfraction_systematic(n,q1,q2)[0]
+        randomp_50 = goodfraction_sample(n,q1,q2,m,lambda: 0.5)[0]
+        randomp_beta1515 = goodfraction_sample(n,q1,q2,m,lambda: random.betavariate(1.5,1.5))[0]
+        random_uniform = goodfraction_sample(n,q1,q2,m,lambda: random.betavariate(1,1))[0]
+
+        print [n, q1, q2, truep, randomp_50, randomp_beta1515, random_uniform]
+        writer.writerow([n, q1, q2, truep, randomp_50, randomp_beta1515, random_uniform])
+
+
+##validate_random_sampling(6,3,4,10000) # 10000 / 32768 possible graphs
+##validate_random_sampling(6,4,3,10000)
+##validate_random_sampling(6,4,4,10000)
+##validate_random_sampling(6,5,3,10000)
+##validate_random_sampling(6,5,4,10000)
+##validate_random_sampling(6,5,5,10000)
+validate_random_sampling(6,[(4,3),(4,4),(5,3),(5,4),(5,5)],10000)
+#__main__()

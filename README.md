@@ -53,6 +53,24 @@ Currently I use the Erdos-Renyi, where all edges are present with probability p=
 
 Along with the estimates in the n large case, I calculate 99% confidence intervals taking the sample size into account.  The confidence intervals are shown in the graph as red error bars, but the error is so small that you can hardly see the red below the blue marks.  NOTE: I am unsure of the validity of confidence intervals here; they require I use a simple random sample on a large population of graphs. Does sampling Erdos-Renyi graphs with replacement count? Will think about it further...
 
+### Evidence for p=0.5 in Erdos-Renyi random graphs
+To validate my choice of p=0.5, I compared it to two alternative schemes:
+
+1. Sample p from a Beta(1.5,1.5) distribution.
+2. Sample p from a Uniform[0,1] distribution.
+
+I compared those alternatives, along with always using p=0.5, to the true proportion of good graphs for n=6 and various q1, q2.  I used a sample size of 10000 random graphs out of a population of 2^(6 choose 2) = 32768 graphs.
+
+| n | q1 | q2 | truep  | p_50   | randomp_beta1515 | random_uniform |
+|---|----|----|--------|--------|------------------|----------------|
+| 6 | 4  | 3  | 0.9142 | 0.9182 | 0.9430           | 0.9542         |
+| 6 | 4  | 4  | 0.3138 | 0.3188 | 0.6493           | 0.7140         |
+| 6 | 5  | 3  | 0.8286 | 0.8297 | 0.7855           | 0.8038         |
+| 6 | 5  | 4  | 0.1622 | 0.1616 | 0.4506           | 0.5250         |
+| 6 | 5  | 5  | 0.0105 | 0.0098 | 0.2547           | 0.3356         |
+
+As you can see, always choosing p=0.5 is closest to the true proportion truep.   
+
 ## Analysis
 If the results are correct (valid simple random sample, valid confidence intervals), then 99% of all graphs of size n are good graphs when n is far smaller than the Ramsey number R(q1,q2).  This means we can, with high probability, *guarantee the presence of certain sub-structures in networks much smaller than expected by the Ramsey numbers*.  By sub-structure I mean cliques and independent sets, but I believe the results can generalize to other opposing sub-structures.
 

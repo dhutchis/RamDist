@@ -15,20 +15,52 @@ logger = logging.getLogger(__name__)
 # terminology:  good graph has a K3 or an I4
 #               bad graph has neither a K3 nor an I4
 
+def make_table_approx_ramsey(c):
+    m = 50000
+    fin = []
+    fin_prop_lb = []
+    for q1 in range(1,7):
+        finrow = [1]
+        finrow_prop_lb = [1]
+        for q2 in range(2,q1+1):
+            if q2 == 2:
+                finrow.append(q2)
+                finrow_prop_lb.append(1)
+                continue
+            dic = read_results_from_file(q1,q2,m)
+            # find first n that has at least c proportion of good graphs
+            aprn = 0
+            for n in itertools.count(1):
+                if dic[n][0] >= c:
+                    aprn = n
+                    break
+            lb = get_lb(q1,q2)
+            prop_lb = aprn / lb
+            print 'q1={},q2={} aprn={} lb={} prop={}'.format(q1,q2,aprn,lb,prop_lb)
+            finrow.append(aprn)
+            finrow_prop_lb.append('{0:.2f}'.format(prop_lb))
+        fin.append(finrow)
+        fin_prop_lb.append(finrow_prop_lb)
+    write_table_csv(fin,'results/table_apr{}_R{}{}_m{}.csv'.format(c,q1,q2,m))
+    write_table_csv(fin_prop_lb,'results/table_apr{}_R{}{}_m{}_prop_lb.csv'.format(c,q1,q2,m))
+
+
 # Goal: for R(3,4)=9, determine the distribution of the proportion of good graphs of size n
 #       as n increases from 1 to 9
 def __main__():
 #    q1, q2 = 4,4
     m = 50000
     # dic is of the form n -> (p, m, lb, ub)
-    for q1 in range(3,7):
-        for q2 in range(3,q1+1):
-            dic = dict()
-            #dic = create_dist(q1,q2,m)
-            print q1,q2,dic
-            #write_results_to_file(dic,q1,q2,m)
-            dic = read_results_from_file(q1,q2,m)
-            do_plot(dic,q1,q2,m)
+##    for q1 in range(3,7):
+##        for q2 in range(3,q1+1):
+##            dic = dict()
+##            #dic = create_dist(q1,q2,m)
+##            print q1,q2,dic
+##            #write_results_to_file(dic,q1,q2,m)
+##            dic = read_results_from_file(q1,q2,m)
+##            do_plot(dic,q1,q2,m)
+##    write_table_csv(arr_ub,'results/table_ub.csv')
+    make_table_approx_ramsey(.99)
 
 def write_results_to_file(dic,q1,q2,m):
     'Write dictionary of results to csv file'
@@ -72,6 +104,23 @@ def do_plot(dic,q1,q2,m):
     plt.title('q1={}, q2={}'.format(q1,q2), size=20)
     #plt.show()
     plt.savefig('results/pic_R{}{}_m{}.png'.format(q1,q2,m))
+
+def write_table_csv(arr2d,filename):
+    'Write 2-dimensional array to filename in csv format'
+    writer = csv.writer(open(filename, 'wb'))
+    row = ['q1 \ q2']
+    maxlen = len(arr2d)+1
+    row.extend(range(1,maxlen))
+    writer.writerow(row)
+    rownum = 1
+    for row in arr2d:
+        towrite = [rownum]
+        towrite.extend(row)
+        for _ in range(maxlen-rownum-1):
+            towrite.append('')
+        print towrite
+        writer.writerow(towrite)
+        rownum += 1
 
 # known lower bounds
 arr_lb = [
@@ -237,5 +286,6 @@ def goodfraction_sample(n,q1,q2, m):
         logger.warn('{}: p={}, padj={}, m={}, padj-w={}, padj+w={}'
                     .format(n,p,padj,m,padj-w,padj+w))
     return p, m, padj-w, padj+w
+
 
 __main__()

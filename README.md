@@ -21,6 +21,33 @@ Let's step up to bigger results. Note that the vertical lines represent [known l
 
 ![graph for q1=6,q2=6](results/pic_R66_m50000.png)
 
+### Approximate Ramsey Numbers
+Given q1, q2 and c (say c=0.9), let's calculate the smallest size n such that at least c of the graphs of size n are good. Call this **c-R(q1,q2), the c-approximate Ramsey number**. We can find these easily from the graph-- just choose the smallest n that plots above c.
+
+Here is a table of the 0.99-approximate Ramsey numbers, varying q1 and q2:
+
+| q1 \ q2 | 1 | 2 | 3 | 4  | 5  | 6  |
+|---------|---|---|---|----|----|----|
+| 1       | 1 |   |   |    |    |    |
+| 2       | 1 | 2 |   |    |    |    |
+| 3       | 1 | 2 | 6 |    |    |    |
+| 4       | 1 | 2 | 7 | 11 |    |    |
+| 5       | 1 | 2 | 8 | 13 | 17 |    |
+| 6       | 1 | 2 | 9 | 14 | 21 | 27 |
+
+Notice that 0.99-R(q1,q2) << R(q1,q2).  Here is the fraction dividing 0.99-R(q1,q2) / R(q1,q2):
+
+| q1 \ q2 | 1 | 2 | 3    | 4    | 5    | 6    |
+|---------|---|---|------|------|------|------|
+| 1       | 1 |   |      |      |      |      |
+| 2       | 1 | 1 |      |      |      |      |
+| 3       | 1 | 1 | 1.00 |      |      |      |
+| 4       | 1 | 1 | 0.78 | 0.61 |      |      |
+| 5       | 1 | 1 | 0.57 | 0.52 | 0.40 |      |
+| 6       | 1 | 1 | 0.50 | 0.39 | 0.36 | 0.26 |
+
+Interesting result. What are the applications & corollaries?
+
 ## Method
 There are 2^(n*(n-1)/2) graphs of size n.  When n is small, say < 7, we can enumerate every graph of size n and count how many are good.
 

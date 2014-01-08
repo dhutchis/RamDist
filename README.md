@@ -1,7 +1,7 @@
 # RamDist
 
 Terminology: Given n, q1, q2 
-define a ***good*** graph as one that has either a sub-clique of size q1 (call this a Kq1) *or* a sub-independent-set of size q2 (call this an Iq2).  A ***bad*** graph has neither substructure.
+define a ***good*** graph as one that has either a sub-clique of size q1 (call this a Kq1) *or* a sub-independent-set of size q2 (call this an Iq2).  A ***bad*** graph has neither sub-structure.
 
 RamDist calculates the proportion of good graphs of size n, as n increases from 1 to the [Ramsey number](https://en.wikipedia.org/wiki/Ramsey's_theorem#Ramsey_numbers) R(q1,q2). Let's illustrate with figures:
 
@@ -30,9 +30,12 @@ Currently I use the Erdos-Renyi, where all edges are present with probability p=
 
 Along with the estimates in the n large case, I calculate 99% confidence intervals taking the sample size into account.  The confidence intervals are shown in the graph as red error bars, but the error is so small that you can hardly see the red below the blue marks.  NOTE: I am unsure of the validity of confidence intervals here; they require I use a simple random sample on a large population of graphs. Does sampling Erdos-Renyi graphs with replacement count? Will think about it further...
 
-Next steps: analyze results for q1=5,q2=5. Use larger sample sizes.  Consider parallelizing code.
+## Analysis
+If the results are correct (valid simple random sample, valid confidence intervals), then 99% of all graphs of size n are good graphs when n is far smaller than the Ramsey number R(q1,q2).  This means we can, with high probability, *guarantee the presence of certain sub-structures in networks much smaller than expected by the Ramsey numbers*.  By sub-structure I mean cliques and independent sets, but I believe the results can generalize to other opposing sub-structures.
 
+### Next steps
+Check other random graph models. Use larger sample sizes.  Consider parallelizing code.  Find the asymptotic trend of n at which 99% of all graphs are good.
 
-### Thanks
-to the [igraph](http://igraph.sourceforge.net/index.html) library! Your clique number and independent set number and random graph generation methods really help.
+## Thanks
+to the [igraph](http://igraph.sourceforge.net/index.html) library! Your clique number and independent set number and random graph generation methods saved quite a bit of time.
 

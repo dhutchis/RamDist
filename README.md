@@ -87,5 +87,8 @@ If the results are correct (valid simple random sample, valid confidence interva
 Check other random graph models. Use larger sample sizes.  Consider parallelizing code.  Find the asymptotic trend of n at which 99% of all graphs are good.
 
 ## Thanks
-to the [igraph](http://igraph.sourceforge.net/index.html) library! Your clique number and independent set number and random graph generation methods saved quite a bit of time.
+to [Tammy Kolda](http://www.sandia.gov/~tgkolda/), for your suggestions and discussions.
+
+And to the [igraph](http://igraph.sourceforge.net/index.html) library! Your clique number and independent set number and random graph generation methods saved quite a bit of time.
+
 

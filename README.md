@@ -53,14 +53,20 @@ Instead of sampling the space of all graphs of n nodes, I ***stratify*** samplin
 
 Along with the estimates in the n large case, I calculate 99% confidence intervals taking the sample size into account.  The confidence intervals are shown in the graph as red error bars, but the error is so small that you can hardly see the red below the blue marks.  NOTE: I am unsure of the validity of confidence intervals here; they require I use a simple random sample on a large population of graphs. Does sampling Erdos-Renyi graphs with replacement count? Will think about it further...
 
-### Past method, possibly equivalent
+### Equivalence to Original method
 My first sampling method used Erdos-Renyi in the first sense, where all edges are present with probability p=0.5 independently, to generate random graphs (instead of fixing the number of edges and choosing edge locations randomly).  
 
-This may be equivalent to the stratified method, since both methods favor the approx. "half-full" graphs much more.  Not sure how to formally show this, but it certainly feels that way.  Experimentally, the two methods produce nearly identical results.
+Here is a proof that it is equivalent to the stratified method, which validates the nearly identical experimental results.  Both methods favor the approx. "half-full" graphs much more.  
 
-Graphical comparisons between the stratified and original p=0.5 methods are in the [comparison folder](results_compare_orig_stratified) above.
+	Let N = (n choose 2) = n*(n-1)/2, the max possible number of edges
+	In the p=0.5 model (from binomial pmf), 
+		P(g has e edges) = (N choose e) * (1/2)^e * (1-1/2)^(N-e)
+			= (N choose e) / 2^N
+	In the stratified model,
+		weight placed on a stratum of graphs with e edges
+			= (N choose e) / 2^N
 
-As an aside, it is well-known that Erdos-Renyi random graphs are not indicative of real-world networks.  It is worthwhile experimenting with other random graph models in the future.  
+So it seems changing the code to stratify didn't change the way we sample graphs at all, but it is easier to conceptually understand. 
 
 #### Evidence for p=0.5 in past method
 To validate my choice of p=0.5, I compared it to two alternative schemes:
@@ -84,7 +90,9 @@ As you can see, always choosing p=0.5 is closest to the true proportion truep.
 If the results are correct (valid simple random sample, valid confidence intervals), then 99% of all graphs of size n are good graphs when n is far smaller than the Ramsey number R(q1,q2).  This means we can, with high probability, *guarantee the presence of certain sub-structures in networks much smaller than expected by the Ramsey numbers*.  By sub-structure I mean cliques and independent sets, but I believe the results can generalize to other opposing sub-structures.
 
 ### Next steps
-Check other random graph models. Use larger sample sizes.  Consider parallelizing code.  Find the asymptotic trend of n at which 99% of all graphs are good.
+It is well-known that Erdos-Renyi random graphs are not indicative of real-world networks.  Experiment with other random graph models.  
+
+Use larger sample sizes.  Consider parallelizing code.  Find the asymptotic trend of n at which 99% of all graphs are good.
 
 ## Thanks
 to [Tammy Kolda](http://www.sandia.gov/~tgkolda/), for your suggestions and discussions.

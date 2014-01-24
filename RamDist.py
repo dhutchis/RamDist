@@ -8,13 +8,98 @@ import math
 import numpy
 import scipy
 import scipy.stats
+import scipy.misc
 import matplotlib.pyplot as plt
+import sys
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # terminology:  good graph has a K3 or an I4
 #               bad graph has neither a K3 nor an I4
+
+
+# Goal: for R(3,4)=9, determine the distribution of the proportion of good graphs of size n
+#       as n increases from 1 to 9
+def __main__():
+#    q1, q2 = 4,4
+    m = 50000
+    base = 'results_stratify/'
+    # dic is of the form n -> (p, m, lb, ub)
+    for q1 in range(3,7):
+        for q2 in range(3,q1+1):
+            dic = dict()
+            dic = create_dist(q1,q2,m)
+            print q1,q2,dic
+            write_results_to_file(base,dic,q1,q2,m)
+            #dic = read_results_from_file(base,q1,q2,m)
+            do_plot(base,dic,q1,q2,m)
+##    write_table_csv(arr_ub,'results/table_ub.csv')
+##    make_table_approx_ramsey(.99)
+
+def main_compare_pics():
+    ''' Compare output from two different directories vertically '''
+    m = 50000
+    for q1 in range(3,7):
+        for q2 in range(3,q1+1):
+            dic1 = read_results_from_file('results/',q1,q2,m)
+            name1 = 'Model1: Erdos-Renyi p=0.5'
+            dic2 = read_results_from_file('results_stratify/',q1,q2,m)
+            name2 = 'Model2: Stratified across # of edges'
+            do_plot_show('results_compare_orig_stratified/',dic1,name1,dic2,name2,q1,q2,m)
+
+def do_plot_show(base,dic1,name1,dic2,name2,q1,q2,m):
+    ''' Compare output from two different runs vertically '''
+    # get lb, ub
+    lb = get_lb(q1,q2)
+    ub = get_ub(q1,q2)
+    f, axarr = plt.subplots(2, sharex=True)
+    plt.xlabel('n', size=18)
+    plt.ylabel('Pr( good graph )', size=18)
+
+    x_n, y_p, y_lb, y_ub = [], [], [], []
+    for key, val in dic1.items():
+        x_n.append(key)
+        y_p.append(val[0])
+        y_lb.append(val[0]-val[2]) # want errors from center
+        y_ub.append(val[3]-val[0])
+
+    axarr[0].hold(False)
+    #plt.plot(x_n, y_lb, 'r')
+    #plt.plot(x_n, y_ub, 'r')
+    axarr[0].plot(x_n, y_p, linestyle="dashed", marker="o") #linewidth=2,
+    axarr[0].hold(True)
+    axarr[0].errorbar(x_n,y_p, yerr=[y_lb,y_ub], linestyle="None", marker="None")
+    if lb != None:
+        axarr[0].axvline(x=lb, ymin=0, ymax=1, color='g', linestyle='dashed')
+    if ub != None:
+        axarr[0].axvline(x=ub, ymin=0, ymax=1, color='m', linestyle='dashed')
+        axarr[0].axvline(x=ub+ub/25,ymin=0,ymax=0,linestyle="None", marker="None")
+    axarr[0].set_title('q1='+str(q1)+', q2='+str(q2)+', '+name1)
+
+    x_n, y_p, y_lb, y_ub = [], [], [], []
+    for key, val in dic2.items():
+        x_n.append(key)
+        y_p.append(val[0])
+        y_lb.append(val[0]-val[2]) # want errors from center
+        y_ub.append(val[3]-val[0])
+    axarr[1].hold(False)
+    #plt.plot(x_n, y_lb, 'r')
+    #plt.plot(x_n, y_ub, 'r')
+    axarr[1].plot(x_n, y_p, linestyle="dashed", marker="o") #linewidth=2,
+    axarr[1].hold(True)
+    axarr[1].errorbar(x_n,y_p, yerr=[y_lb,y_ub], linestyle="None", marker="None")
+    if lb != None:
+        axarr[1].axvline(x=lb, ymin=0, ymax=1, color='g', linestyle='dashed')
+    if ub != None:
+        axarr[1].axvline(x=ub, ymin=0, ymax=1, color='m', linestyle='dashed')
+        axarr[1].axvline(x=ub+ub/25,ymin=0,ymax=0,linestyle="None", marker="None")
+    axarr[1].set_title('q1='+str(q1)+', q2='+str(q2)+', '+name2)
+
+    if base == None:
+        plt.show()
+    else:
+        plt.savefig(base+'pic_R{}{}_m{}.png'.format(q1,q2,m))
 
 def make_table_approx_ramsey(c):
     m = 50000
@@ -45,41 +130,23 @@ def make_table_approx_ramsey(c):
     write_table_csv(fin,'results/table_apr{}_R{}{}_m{}.csv'.format(c,q1,q2,m))
     write_table_csv(fin_prop_lb,'results/table_apr{}_R{}{}_m{}_prop_lb.csv'.format(c,q1,q2,m))
 
-
-# Goal: for R(3,4)=9, determine the distribution of the proportion of good graphs of size n
-#       as n increases from 1 to 9
-def __main__():
-#    q1, q2 = 4,4
-    m = 50000
-    # dic is of the form n -> (p, m, lb, ub)
-    for q1 in range(3,7):
-        for q2 in range(3,q1+1):
-            dic = dict()
-            dic = create_dist(q1,q2,m)
-            print q1,q2,dic
-            write_results_to_file(dic,q1,q2,m)
-            #dic = read_results_from_file(q1,q2,m)
-            do_plot(dic,q1,q2,m)
-##    write_table_csv(arr_ub,'results/table_ub.csv')
-##    make_table_approx_ramsey(.99)
-
-def write_results_to_file(dic,q1,q2,m):
+def write_results_to_file(base,dic,q1,q2,m):
     'Write dictionary of results to csv file'
-    writer = csv.writer(open('results_randomp/dic_R{}{}_m{}.csv'.format(q1,q2,m), 'wb'))
+    writer = csv.writer(open(base+'dic_R{}{}_m{}.csv'.format(q1,q2,m), 'wb'))
     for key, value in dic.items():
         p, m, lb, ub = value
         writer.writerow([key, p, int(m), lb, ub])
 
-def read_results_from_file(q1,q2,m):
+def read_results_from_file(base,q1,q2,m):
     'Read csv file and return the dictionary of values'
-    reader = csv.reader(open('results_randomp/dic_R{}{}_m{}.csv'.format(q1,q2,m), 'rb'))
+    reader = csv.reader(open(base+'dic_R{}{}_m{}.csv'.format(q1,q2,m), 'rb'))
     dic = dict()
     for row in reader:
         dic[int(row[0],10)] = float(row[1]),int(row[2],10),float(row[3]),float(row[4]) #tuple(map(float,row[1:5]))
         #print dic[int(row[0])]
     return dic
 
-def do_plot(dic,q1,q2,m):
+def do_plot(base,dic,q1,q2,m):
     x_n, y_p, y_lb, y_ub = [], [], [], []
     for key, val in dic.items():
         x_n.append(key)
@@ -103,8 +170,10 @@ def do_plot(dic,q1,q2,m):
     plt.xlabel('n', size=18)
     plt.ylabel('Pr( good graph )', size=18)
     plt.title('q1={}, q2={}'.format(q1,q2), size=20)
-    #plt.show()
-    plt.savefig('results_randomp/pic_R{}{}_m{}.png'.format(q1,q2,m))
+    if base == None:
+        plt.show()
+    else:
+        plt.savefig(base+'pic_R{}{}_m{}.png'.format(q1,q2,m))
 
 def write_table_csv(arr2d,filename):
     'Write 2-dimensional array to filename in csv format'
@@ -184,7 +253,7 @@ def create_dist(q1,q2,m):
         if dic[n][0] == 1 and (n == 1 or dic[n-1][0] == 1):
             break
     for n in itertools.count(7):
-        dic[n] = goodfraction_sample(n,q1,q2, m)
+        dic[n] = goodfraction_sample_stratify(n,q1,q2, m)
         if dic[n][0] == 1 and dic[n-1][0] == 1:
             break
     return dic
@@ -316,5 +385,58 @@ def validate_random_sampling(n,q1q2list,m):
 ##validate_random_sampling(6,5,3,10000)
 ##validate_random_sampling(6,5,4,10000)
 ##validate_random_sampling(6,5,5,10000)
-validate_random_sampling(6,[(4,3),(4,4),(5,3),(5,4),(5,5)],10000)
-#__main__()
+#validate_random_sampling(6,[(4,3),(4,4),(5,3),(5,4),(5,5)],10000)
+
+
+def goodfraction_sample_stratify(n,q1,q2, m):
+    '''Sample m graphs of size n and return p, m, padj-w, padj+w
+    where p is the proportion of good graphs.
+    Divides the graphs into strata 0 through n, where stratum i contains the
+        graphs with i edges. Proportionally samples strata i with
+        m * (n choose i) / 2^(n choose 2) samples.
+        [# graphs e edges, n nodes / # graphs n nodes]
+    padj and w are from the confidence interval using the Wilson score method.'''
+##    confidence = 0.99,interval_width = 0.01
+##    m = choose_sample_size(confidence,interval_width)
+    good, bad = 0, 0
+
+    for e in xrange(0,int(n*(n-1)/2)+1):
+        egood, ebad = 0,0
+        me = int(m * int(scipy.misc.comb(n*(n-1)/2,e)+0.5) / (2**(n*(n-1)/2)) + 0.5) # sample size for this stratum
+        countdown = me
+        while countdown > 0:
+            countdown -= 1
+            g = igraph.Graph.Erdos_Renyi(n=n,m=e)
+            if is_good_graph(g,q1,q2):
+                egood += 1
+            else:
+                ebad += 1
+        good += egood
+        bad += ebad
+        print 'q1,q2 = {},{}, n = {}, e = {}, me = {}, egood = {}, ep = {}'.format(q1,q2,n,e,me,egood,0 if egood+ebad==0 else egood/(egood+ebad))
+
+    # TODO: update to proper confidence interval for stratified sampling:
+    #   see stratified Newcombe confidence interval proposed by Yan and Su (2010)
+    #   used here: http://www.pharmasug.org/proceedings/2013/SP/PharmaSUG-2013-SP04.pdf
+    #   also nice reference: http://wiki.awf.forst.uni-goettingen.de/wiki/index.php/Stratified_sampling
+    # Old implementation:
+    # calc 99% confidence interval for proportion p assuming no strata
+    # Use Wilson score interval: https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Wilson_score_interval
+    # (the textbook normal approx interval fails when p close to 1)
+    print 'g g+b p {} {} {}'.format(good,good+bad,good/(good+bad))
+    assert abs(good + bad - m) < 5
+    m = good+bad
+    confidence = 0.99               # (parameter)
+    p = good / (good+bad)
+    tstar = scipy.stats.t.ppf(1- (1-confidence)/2, m)
+    tstar2 = tstar**2
+    padj = (p + (tstar2)/(2*m)) / (1 + (tstar2)/m)
+    w = tstar * math.sqrt(p*(1-p)/m + (tstar2)/(4*(m**2))) / (1 + (tstar2)/m)
+    if padj-w > p or padj+w < p:
+        logger.warn('{}: p={}, padj={}, m={}, padj-w={}, padj+w={}'
+                    .format(n,p,padj,m,padj-w,padj+w))
+    return p, m, padj-w, padj+w
+
+
+__main__()
+#main_compare_pics()

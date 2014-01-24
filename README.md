@@ -3,7 +3,7 @@
 Terminology: Given n, q1, q2 
 define a ***good*** graph as one that has either a sub-clique of size q1 (call this a Kq1) *or* a sub-independent-set of size q2 (call this an Iq2).  A ***bad*** graph has neither sub-structure.
 
-RamDist calculates the proportion of good graphs of size n, as n increases from 1 to the [Ramsey number](https://en.wikipedia.org/wiki/Ramsey's_theorem#Ramsey_numbers) R(q1,q2). Let's illustrate with figures:
+RamDist estimates the proportion of good graphs of size n, as n increases from 1 to the [Ramsey number](https://en.wikipedia.org/wiki/Ramsey's_theorem#Ramsey_numbers) R(q1,q2). Let's illustrate with figures:
 
 ![graph for q1=3,q2=3](results/pic_R33_m50000.png)
 
@@ -49,11 +49,20 @@ There are 2^(n*(n-1)/2) graphs of size n.  When n is small, say < 7, we can enum
 
 When n is large, say >= 7, enumerating every graph of size n is infeasible.  Instead, generate m random graphs of size n and count how many are good.  Use this to estimate the true proportion of good graphs. A typical value for m is 50000.
 
-Currently I use the Erdos-Renyi, where all edges are present with probability p=0.5 independently, to generate random graphs.  It is well-known that Erdos-Renyi random graphs are not indicative of real-world networks.  It is worthwhile experimenting with other random graph models in the future.  
+Instead of sampling the space of all graphs of n nodes, I ***stratify*** sampling proportionally across the subclasses of graphs of n nodes and e edges.  Suppose proportion p of the graphs of n nodes and e edges are good. Weigh that proportion p with weight (n choose e) / 2^(n choose 2), corresponding to the population proportion of graphs of n nodes and e edges out of all graphs of n nodes.  Graphs are generated in the second Erdos-Renyi senese, fixing the number of edges and letting the edge positions vary randomly.  This favors the graphs that are about "half-full" of edges much more than graphs with almost no edges or almost every edge (of which there are far fewer different graphs). 
 
 Along with the estimates in the n large case, I calculate 99% confidence intervals taking the sample size into account.  The confidence intervals are shown in the graph as red error bars, but the error is so small that you can hardly see the red below the blue marks.  NOTE: I am unsure of the validity of confidence intervals here; they require I use a simple random sample on a large population of graphs. Does sampling Erdos-Renyi graphs with replacement count? Will think about it further...
 
-### Evidence for p=0.5 in Erdos-Renyi random graphs
+### Past method, possibly equivalent
+My first sampling method used Erdos-Renyi in the first sense, where all edges are present with probability p=0.5 independently, to generate random graphs (instead of fixing the number of edges and choosing edge locations randomly).  
+
+This may be equivalent to the stratified method, since both methods favor the approx. "half-full" graphs much more.  Not sure how to formally show this, but it certainly feels that way.  Experimentally, the two methods produce nearly identical results.
+
+Graphical comparisons between the stratified and original p=0.5 methods are in the [comparison folder](results_compare_orig_stratified) above.
+
+As an aside, it is well-known that Erdos-Renyi random graphs are not indicative of real-world networks.  It is worthwhile experimenting with other random graph models in the future.  
+
+#### Evidence for p=0.5 in past method
 To validate my choice of p=0.5, I compared it to two alternative schemes:
 
 1. Sample p from a Beta(1.5,1.5) distribution.

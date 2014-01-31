@@ -1,5 +1,10 @@
 # RamDist
 
+### Abstract
+**Structure Almost Surely: Approximate Ramsey Numbers**
+Consider the approximate Ramsey number 0.99-R(p,q), defined as the minimum network size n such that 99% of all 2-colored graphs of size n have a monochromatic subgraph of size p or of size q.  Using random samples, we find that 0.99-R(p,q) grows significantly slower than the classical Ramsey number 1.0-R(p,q).  Subsequently, we can guarantee the presence of substructure in a network at smaller network sizes than expected, in exchange for marginally small chance of error.
+
+## Intro
 Terminology: Given n, q1, q2 
 define a ***good*** graph as one that has either a sub-clique of size q1 (call this a Kq1) *or* a sub-independent-set of size q2 (call this an Iq2).  A ***bad*** graph has neither sub-structure.
 
@@ -93,6 +98,9 @@ If the results are correct (valid simple random sample, valid confidence interva
 It is well-known that Erdos-Renyi random graphs are not indicative of real-world networks.  Experiment with other random graph models.  
 
 Use larger sample sizes.  Consider parallelizing code.  Find the asymptotic trend of n at which 99% of all graphs are good.
+
+***Unlabeled Graphs***: The Ramsey search is really over unlabeled graphs, since all the graphs that are isomorphic to each other (an equivalence class) are all good or all bad with respect to a Ramsey number.  But searching over unlabeled graphs is tough; there are no easy ways to generate all the unlabeled graph classes (choosing a canonical representative of each class) with n nodes. But there are heuristics.  See nauty and traces for good tools that capitalize on heuristics from graph coloring.  
+Todo: look into the unlabeled graph search for good/bad graphs. See if we can reach better proportion estimates with that approach. 
 
 ## Thanks
 to [Tammy Kolda](http://www.sandia.gov/~tgkolda/), for your suggestions and discussions.
